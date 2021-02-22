@@ -1,0 +1,473 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.Services;
+using Entidades;
+using LogicaNegocio;
+using NLog;
+using Utilitarios;
+
+namespace wsSalud
+{
+    /// <summary>
+    /// Descripción breve de WebService1
+    /// </summary>
+    [WebService(Namespace = "http://tempuri.org/")]
+    [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
+    [System.ComponentModel.ToolboxItem(false)]
+    // Para permitir que se llame a este servicio web desde un script, usando ASP.NET AJAX, quite la marca de comentario de la línea siguiente. 
+    // [System.Web.Script.Services.ScriptService]
+    public class wsSalud : System.Web.Services.WebService
+    {
+      Logger Log = General.getLogger();
+     [WebMethod]
+        public EN_COTIZARESULT obtenerCotizacionSalud(
+            string usuario, string password, int? cod_agt, string fec_efec_pol, string fec_vcto_pol, int? cod_mon, string mca_imp_mapfre_dolar, double? imp_mapfre_dolar, double? pct_dscto_comercial,
+            int? cod_frac_pago, int? cod_cia, int? cod_ramo,string num_poliza_grupo, int? cod_modalidad, string num_contrato,string num_sub_contrato,string mca_sexo_aseg,
+            string  fec_nacimiento_aseg,int?  cod_parentesco,int?  cod_ocupacion,int?  cod_especialidad,int?  num_dependientes,int? p_val_estatura,
+            int? val_estatura, int? val_peso, double? imp_pneta_mensual, List<riesgo_cotiza> datos_riesgo_cotiza
+            //RDIAZ - Fin [Ctrl. Cambio II - MultiRiesgo]
+            )
+        {
+            EN_COTIZA objCotizar = new EN_COTIZA();
+            EN_COTIZARESULT objCotizaResult = new EN_COTIZARESULT();
+            string mensajeError = string.Empty;
+            
+            #region "Asignar valores"
+                try
+                {
+                    Log.Debug("usuario =" + usuario);
+                    objCotizar.usuario = usuario;
+                    Log.Debug("password =" + password);
+                    objCotizar.password = password;
+                    Log.Debug("cod_agt =" + cod_agt);
+                    objCotizar.cod_agt = cod_agt;
+                    Log.Debug("cod_mon =" + cod_mon);
+                    objCotizar.cod_mon = cod_mon;
+                    Log.Debug("mca_imp_mapfre_dolar =" + mca_imp_mapfre_dolar);
+                    objCotizar.mca_imp_mapfre_dolar = mca_imp_mapfre_dolar;
+                    Log.Debug("imp_mapfre_dolar =" + imp_mapfre_dolar);
+                    objCotizar.imp_mapfre_dolar = imp_mapfre_dolar;
+                    Log.Debug("pct_dscto_comercial =" + pct_dscto_comercial);
+                    objCotizar.pct_dscto_comercial = pct_dscto_comercial;
+                    Log.Debug("cod_frac_pago =" + cod_frac_pago);
+                    objCotizar.cod_frac_pago = cod_frac_pago == null ? 10001 : cod_frac_pago;
+                    Log.Debug("cod_cia =" + cod_cia);
+                    objCotizar.cod_cia = cod_cia;
+                    Log.Debug("cod_ramo =" + cod_ramo);
+                    objCotizar.cod_ramo = cod_ramo;
+                    Log.Debug("fec_efec_pol =" + fec_efec_pol);
+                    objCotizar.fec_efec_pol = fec_efec_pol;
+                    Log.Debug("fec_vcto_pol =" + fec_vcto_pol);
+                    objCotizar.fec_vcto_pol = fec_vcto_pol;
+                    Log.Debug("num_poliza_grupo =" + num_poliza_grupo);
+                    objCotizar.num_poliza_grupo = num_poliza_grupo;
+                    Log.Debug("cod_modalidad =" + cod_modalidad);
+                    objCotizar.cod_modalidad= cod_modalidad;
+                    Log.Debug("num_contrato =" + num_contrato);
+                    objCotizar.num_contrato = num_contrato;
+                    Log.Debug("num_sub_contrato =" + num_sub_contrato);
+                    objCotizar.num_sub_contrato = num_sub_contrato;
+                    Log.Debug("mca_sexo_aseg =" + mca_sexo_aseg);
+                    objCotizar.mca_sexo_aseg = mca_sexo_aseg;
+                    Log.Debug("fec_nacimiento_aseg =" + fec_nacimiento_aseg);
+                    objCotizar.fec_nacimiento_aseg = fec_nacimiento_aseg;
+                    Log.Debug("cod_parentesco =" + cod_parentesco);
+                    objCotizar.cod_parentesco = cod_parentesco;
+                    Log.Debug("cod_ocupacion =" + cod_ocupacion);
+                    objCotizar.cod_ocupacion = cod_ocupacion;
+                    Log.Debug("cod_especialidad =" + cod_especialidad);
+                    objCotizar.cod_especialidad = cod_especialidad;
+
+                    Log.Debug("num_dependientes =" + num_dependientes);
+                    objCotizar.num_dependientes = num_dependientes;
+                    Log.Debug("val_estatura =" + val_estatura);
+                    objCotizar.val_estatura = val_estatura;
+                    Log.Debug("val_peso =" + val_peso);
+                    objCotizar.val_peso = val_peso;
+                    Log.Debug("imp_pneta_mensual =" + imp_pneta_mensual);
+                    objCotizar.imp_pneta_mensual = imp_pneta_mensual;
+
+                    objCotizar.datos_riesgo_cotiza = datos_riesgo_cotiza;
+
+           
+
+                }
+                catch (Exception ex)
+                {
+                    mensajeError = "Error al asignar variables: " + ex.Message;
+                    Log.Error("Error al asignar variables: " + ex.Message);
+                    //throw;
+                }
+            #endregion
+
+
+                LN_ValidarCotizacionSalud objValidar = new LN_ValidarCotizacionSalud();
+
+                if (objValidar.ValidarCotizacion(objCotizar, out mensajeError) || mensajeError.Length > 0)
+                {
+                    objCotizaResult.COD_ERROR = 2;
+                    objCotizaResult.DESC_ERROR = mensajeError;
+                }
+                else
+                {
+                    LN_COTIZACION oLNCotizacion = new LN_COTIZACION();
+                    objCotizaResult = oLNCotizacion.ObtenerCotizacion(objCotizar);
+                }
+
+                Log.Debug(" fin operacion de cotizacion ");
+                return objCotizaResult;
+        }
+         
+        [WebMethod]
+        public EN_EMITERESULT obtenerEmisionSalud(
+            string usuario, string password, int? cod_agt, int? cod_mon, string mca_imp_mapfre_dolar, double? imp_mapfre_dolar,string fec_efec_pol,
+            string fec_vcto_pol,double? pct_dsc_comercial, int? cod_frac_pago, int? cod_cia, int? cod_ramo, string num_poliza_grupo, int? cod_modalidad,
+            string num_contrato,string num_sub_contrato,string mca_fisico_contratante,string tip_documento_contratante,int?cod_documento_contratante,
+            string nombre_contratante, string ape_paterno_contratante, string telf_fijo_contratante, string telf_movil_contratante,
+            string ape_materno_contratante, string mail_contrantante, string representante, int? cargo_representante, string tip_act_economico,
+            string fec_nacimiento_cliente, string mca_sexo, string profesion_cliente, string cod_est_civil, string cod_pais_cli, string cod_nacionalidad_cli,
+            string cod_estado_cli, string cod_provincia_cli, string cod_distrito_cli, string tipo_domicilio,
+            string domicilio_cliente, int? tip_num_cliente, int? num_cliente, int? tip_interior, string interior_cliente, int? tip_zona_cliente, string zona_cliente, 
+            string lugar_referencia,int? cod_parentesco,string tip_persona,string tip_documento_aseg,int? cod_documento_aseg,string Nom_asegurado,
+            string ape_pat_aseg, string ape_mat_asegurado, string estado_civil_aseg, string mca_sexo_aseg, string fec_nacimiento_aseg, int? cod_ocupacion, int? cod_especialidad,
+            string texto_beneficiario,int? num_dependientes,int? num_poliza_aseg_ant,string nom_aseg_ant,
+            string fec_efec_pol_anto,string fec_vcto_pol_ant,int?val_peso,int?val_estatura,string mca_zurdo,double? imp_pneta_mensual,
+        
+
+            List<riesgo_emite> datos_riesgo_emite
+            
+             
+           ) {
+            //EN_COTIZA objCotizar = new EN_COTIZA();
+         
+            Log.Debug(" Inicio operacion de emision ");
+            EN_EMITE objEmision = new EN_EMITE();
+            EN_EMITERESULT objEmisionResult = new EN_EMITERESULT();
+            //Utilitarios u = new Utilitarios;
+
+            String mensajeError = "";
+            #region "Asignar variables"
+            
+            try
+            {
+                Log.Debug(" usuario =" + usuario);
+                objEmision.usuario = usuario;
+                Log.Debug(" password =" + password);
+                objEmision.password = password;
+                Log.Debug("cod_agt =" + cod_agt);
+                objEmision.cod_agt = cod_agt;
+                Log.Debug("cod_mon =" + cod_mon);
+                objEmision.cod_mon = cod_mon;
+                Log.Debug(" fec_efec_pol =" + fec_efec_pol);
+                objEmision.fec_efec_pol = fec_efec_pol;
+                Log.Debug(" fec_vcto_pol =" + fec_vcto_pol);
+                objEmision.fec_vcto_pol = fec_vcto_pol;
+                Log.Debug(" mca_imp_mapfre_dolar =" + mca_imp_mapfre_dolar);
+                objEmision.mca_imp_mapfre_dolar = mca_imp_mapfre_dolar;
+                Log.Debug(" imp_mapfre_dolar =" + imp_mapfre_dolar);
+                objEmision.imp_mapfre_dolar = imp_mapfre_dolar;
+                Log.Debug(" pct_dsc_comercial =" + pct_dsc_comercial);
+                objEmision.pct_dsc_comercial = pct_dsc_comercial;
+                Log.Debug(" cod_frac_pago =" + cod_frac_pago);
+                objEmision.cod_frac_pago = cod_frac_pago;
+                Log.Debug(" cod_cia =" + cod_cia);
+                objEmision.cod_cia = cod_cia;
+                Log.Debug(" cod_ramo =" + cod_ramo);
+                objEmision.cod_ramo = cod_ramo;
+                Log.Debug(" num_poliza_grupo =" + num_poliza_grupo);
+                objEmision.num_poliza_grupo = num_poliza_grupo;
+                Log.Debug(" cod_modalidad =" + cod_modalidad);
+                objEmision.cod_modalidad = cod_modalidad;
+                Log.Debug("num_contrato =" + num_contrato);
+                objEmision.num_contrato = num_contrato;
+                Log.Debug(" num_sub_contrato =" + num_sub_contrato);
+                objEmision.num_sub_contrato = num_sub_contrato;
+                Log.Debug(" mca_fisico_contratante =" + mca_fisico_contratante);
+                objEmision.mca_fisico_contratante = mca_fisico_contratante;
+                Log.Debug(" tip_documento_contratante =" + tip_documento_contratante);
+                objEmision.tip_documento_contratante = tip_documento_contratante;
+                Log.Debug(" cod_documento_contratante =" + cod_documento_contratante);
+                objEmision.cod_documento_contratante = cod_documento_contratante;
+                Log.Debug(" nombre_contratante =" + nombre_contratante);
+                objEmision.nombre_contratante = nombre_contratante;
+                Log.Debug(" ape_paterno_contratante =" + ape_paterno_contratante);
+                objEmision.ape_paterno_contratante = ape_paterno_contratante;
+                Log.Debug("telf_fijo_contratante=" + telf_fijo_contratante);
+                objEmision.tel_fijo_contratante = telf_fijo_contratante;
+                Log.Debug("telf_movil_contratante=" + telf_movil_contratante);
+                objEmision.tel_movil_contratante = telf_movil_contratante;
+                Log.Debug("ape_materno_contratante=" + ape_materno_contratante);
+                objEmision.ape_materno_contratante = ape_materno_contratante;
+                Log.Debug("mail_contrantante=" + mail_contrantante);
+                objEmision.mail_contrantante = mail_contrantante;
+                Log.Debug("representante=" + representante);
+                objEmision.representante = representante;
+                Log.Debug("cargo_representante=" + cargo_representante);
+                objEmision.cargo_representante = cargo_representante;
+                Log.Debug("tip_act_economico=" + tip_act_economico);
+                objEmision.tip_economica = tip_act_economico;
+                Log.Debug("fec_nacimiento_cliente=" + fec_nacimiento_cliente);
+                objEmision.fec_nacimiento = fec_nacimiento_cliente;
+                Log.Debug("mca_sexo=" + mca_sexo);
+                objEmision.mca_sexo = mca_sexo;
+                Log.Debug("profesion_cliente=" + profesion_cliente);
+                objEmision.profesion_cliente = profesion_cliente;
+                Log.Debug("cod_est_civil=" + cod_est_civil);
+                objEmision.cod_est_civil = cod_est_civil;
+                Log.Debug("cod_pais_cli=" + cod_pais_cli);
+                objEmision.cod_pais = cod_pais_cli;
+                Log.Debug("cod_nacionalidad_cli=" + cod_nacionalidad_cli);
+                objEmision.cod_nacionalidad = cod_nacionalidad_cli;
+                Log.Debug("cod_provincia_cli=" + cod_provincia_cli);
+                objEmision.cod_provincia = cod_provincia_cli;
+                Log.Debug("cod_distrito_cli=" + cod_distrito_cli);
+                objEmision.cod_distrito = cod_distrito_cli;
+                 Log.Debug("tipo_domicilio=" + tipo_domicilio);
+                objEmision.tipo_domicilio_cliente = tipo_domicilio;
+                Log.Debug("domicilio_cliente=" + domicilio_cliente);
+                objEmision.domicilio_cliente = domicilio_cliente;
+                Log.Debug("tip_num_cliente=" + tip_num_cliente);
+                objEmision.tip_numero_cliente = tip_num_cliente;
+                Log.Debug("num_cliente=" + num_cliente);
+                objEmision.num_cliente = num_cliente;
+                Log.Debug("tip_interior=" + tip_interior);
+                objEmision.tip_interior_cliente = tip_interior;
+                Log.Debug("interior_cliente=" + interior_cliente);
+                objEmision.interior_cliente = interior_cliente;
+                Log.Debug("tip_zona_cliente=" + tip_zona_cliente);
+                objEmision.tip_zona_cliente = tip_zona_cliente;
+                Log.Debug("zona_cliente=" + zona_cliente);
+                objEmision.zona_cliente = zona_cliente;
+                Log.Debug("lugar_referencia=" + lugar_referencia);
+                objEmision.lugar_referencia = lugar_referencia;
+                Log.Debug("cod_parentesco=" + cod_parentesco);
+                objEmision.cod_parentesco = cod_parentesco;
+                Log.Debug("tip_persona=" + tip_persona);
+                objEmision.tip_persona = tip_persona;
+                Log.Debug("tip_documento_aseg=" + tip_documento_aseg);
+                objEmision.tip_documento_aseg = tip_documento_aseg;
+                Log.Debug("cod_documento_aseg=" + cod_documento_aseg);
+                objEmision.cod_documento_aseg = cod_documento_aseg; 
+                Log.Debug("Nom_asegurado=" + Nom_asegurado);
+                objEmision.nom_asegurado= Nom_asegurado;  
+                Log.Debug("ape_pat_aseg=" + ape_pat_aseg);
+                objEmision.ape_pat_aseg = ape_pat_aseg;  
+                Log.Debug("ape_mat_asegurado=" + ape_mat_asegurado);
+                objEmision.ape_mat_aseg = ape_mat_asegurado;  
+                Log.Debug("estado_civil_aseg=" + estado_civil_aseg);
+                objEmision.estado_civil_aseg = estado_civil_aseg;  
+                Log.Debug("mca_sexo_aseg=" + mca_sexo_aseg);
+                objEmision.mca_sexo_aseg = mca_sexo_aseg; 
+                Log.Debug("fec_nacimiento_aseg=" + fec_nacimiento_aseg);
+                objEmision.fec_nacimiento_aseg = fec_nacimiento_aseg; 
+                Log.Debug("cod_ocupacion=" + cod_ocupacion);
+                objEmision.cod_ocupacion = cod_ocupacion; 
+                Log.Debug("cod_especialidad=" + cod_especialidad);
+                objEmision.cod_especialidad = cod_especialidad; 
+                Log.Debug("texto_beneficiario=" + texto_beneficiario);
+                objEmision.texto_beneficiario = texto_beneficiario; 
+                Log.Debug("num_dependientes=" + num_dependientes);
+                objEmision.num_dependientes = num_dependientes; 
+                Log.Debug("num_poliza_aseg_ant=" + num_poliza_aseg_ant);
+                objEmision.num_poliza_aseg_ant = num_poliza_aseg_ant; 
+                Log.Debug("nom_aseg_ant=" + nom_aseg_ant);
+                objEmision.nom_aseg_ant = nom_aseg_ant;
+                Log.Debug("fec_efec_pol_anto=" + fec_efec_pol_anto);
+                objEmision.fec_efec_pol_ant = fec_efec_pol_anto;
+                Log.Debug("fec_vcto_pol_ant=" + fec_vcto_pol_ant);
+                objEmision.fec_vcto_pol_ant = fec_vcto_pol_ant;
+                Log.Debug("val_peso=" + val_peso);
+                objEmision.val_peso = val_peso;
+                Log.Debug("val_estatura=" + val_estatura);
+                objEmision.val_estatura = val_estatura;
+                Log.Debug("mca_zurdo=" + mca_zurdo);
+                objEmision.mca_zurdo = mca_zurdo;
+                Log.Debug("imp_pneta_mensual=" + imp_pneta_mensual);
+                objEmision.imp_pneta_mensual = imp_pneta_mensual;
+        
+                objEmision.datos_riesgo_emite = datos_riesgo_emite;
+         
+            }
+            catch (Exception ex)
+            {
+                mensajeError = "Error al asignar variables: " + ex.Message;
+                Log.Error("Error al asignar variables: " + ex.Message);
+            }
+
+            #endregion
+
+            LN_ValidarEmisionSalud objValidar = new LN_ValidarEmisionSalud();
+
+            if (objValidar.ValidarEmitir(objEmision, out mensajeError) || mensajeError.Length > 0)
+            {
+                objEmisionResult.COD_ERROR = "2";
+                objEmisionResult.DESC_ERROR = mensajeError;
+            }
+            else
+            {
+                /*LN_COTIZACION oLNCotizacion = new LN_COTIZACION();
+                objEmisionResult = oLNCotizacion.Emitir(objEmision);*/
+
+                 LN_Emision oLNCotizacion = new LN_Emision();
+                objEmisionResult = oLNCotizacion.Emitir(objEmision);
+
+                 
+            }
+            Log.Debug(" fin operacion de emision ");
+            return objEmisionResult;
+        } 
+
+        #region "Solo para pruebas"
+
+            private string pdfToSstringBase64(string file)
+            {
+                string AsBase64String = "";
+
+                if (ValidarArchivo(file))
+                {
+                    byte[] bytes = null;
+
+                    using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        int numBytesToRead = Convert.ToInt32(fs.Length);
+                        bytes = new byte[(numBytesToRead)];
+                        fs.Read(bytes, 0, numBytesToRead);
+                    }
+
+                    AsBase64String = Convert.ToBase64String(bytes);
+
+                }
+                return AsBase64String;
+            }
+
+            protected bool ValidarArchivo(string file)
+            {
+                bool existe = false;
+                if (System.IO.File.Exists(file))
+                {
+                    existe = true;
+                }
+
+                return existe;
+            }
+
+
+            [WebMethod]
+            public EN_EMITERESULT obtenerEmisionSaludPrueba(
+           string usuario, string password, int? cod_agt, string fec_efec_pol, string fec_vcto_pol, int? cod_mon, string mca_imp_mapfre_dolar, double? imp_mapfre_dolar,
+            double? pct_dsc_comercial, int? cod_frac_pago, int? cod_cia, int? cod_ramo, string num_poliza_grupo, int? cod_modalidad,
+            string num_contrato, string num_sub_contrato, string mca_fisico_contratante, string tip_documento_contratante, int? cod_documento_contratante,
+            string nombre_contratante, string ape_paterno_contratante, string telf_fijo_contratante, string telf_movil_contratante,
+            string ape_materno_contratante, string mail_contrantante, string representante, int? cargo_representante, string tip_act_economico,
+            string fec_nacimiento_cliente, string mca_sexo, string profesion_cliente, string cod_est_civil, string cod_pais_cli, string cod_nacionalidad_cli,
+            string cod_estado_cli, string cod_provincia_cli, string cod_distrito_cli, string tipo_domicilio,
+            string domicilio_cliente, int? tip_num_cliente, int? num_cliente, int? tip_interior, string interior_cliente, int? tip_zona_cliente, string zona_cliente,
+            string lugar_referencia, int? cod_parentesco, string tip_persona, string tip_documento_aseg, int? cod_documento_aseg, string Nom_asegurado,
+            string ape_pat_aseg, string ape_mat_asegurado, string estado_civil_aseg, string mca_sexo_aseg, string fec_nacimiento_aseg, int? cod_ocupacion, int? cod_especialidad,
+            string texto_beneficiario, int? num_dependientes, int? num_poliza_aseg_ant, string nom_aseg_ant,
+            string fec_efec_pol_anto, string fec_vcto_pol_ant, int? val_peso, int? val_estatura, string mca_zurdo, double? imp_pneta_mensual
+           )
+           {
+                List<riesgo_emite> datos_riesgo_emite = new List<riesgo_emite>();
+                riesgo_emite objRiesgo01 = new riesgo_emite();
+                //objRiesgo01.indice = 1;
+               /* objRiesgo01.cod_plan = "1";
+                objRiesgo01.cod_estado_empr = "15";
+                objRiesgo01.cod_zona_cumulo = "128";
+                objRiesgo01.cod_sub_zona_cumulo = "1";
+                objRiesgo01.direccion_empr = "HAROLD CROWN 169";
+                objRiesgo01.ocu_predio = null;
+                objRiesgo01.cod_categoria = 1;
+                objRiesgo01.mca_alarma_monitoreo = "N";
+                objRiesgo01.mca_interconexion = "N";
+                objRiesgo01.tip_comunicacion = "";
+                objRiesgo01.mca_video_web = "N";
+                objRiesgo01.pulsador_medico = "N";
+                objRiesgo01.num_pisos = 2;
+                objRiesgo01.num_sotanos = 0;
+                objRiesgo01.anio_construccion = 2000;
+                objRiesgo01.cod_mat_construccion = "1";
+                objRiesgo01.cod_tip_construccion = "1";
+                objRiesgo01.cod_uso_predio = "1";
+                objRiesgo01.texto_garantia = "";
+                objRiesgo01.cod_abonado = "";
+                objRiesgo01.fec_inspeccion_riesgo = "01/01/2018";
+                objRiesgo01.cod_inspector = null;
+                objRiesgo01.mca_alarma_rosiador = "S";
+                objRiesgo01.mca_gabinete = "S";
+                objRiesgo01.mca_detector_humo = "S";
+                objRiesgo01.mca_vig_propia_con_arma = "S";
+                objRiesgo01.mca_vig_privada = "N";
+                objRiesgo01.mca_con_monitoreo = "N";
+                objRiesgo01.mca_cerco_electrico = "S";
+                objRiesgo01.mca_vig_edificio = "S";
+                objRiesgo01.mca_vig_vecinal = "S";
+                objRiesgo01.mca_conv_I = "N";
+                objRiesgo01.imp_contenido = 100000;
+                objRiesgo01.imp_edificacion = 100000;
+                objRiesgo01.inst_fijas = 10000;
+                objRiesgo01.maq_equipo = 10000;
+                objRiesgo01.imp_mobiliario = 10000;
+                objRiesgo01.imp_existencia = 10000;
+                objRiesgo01.imp_decl_luce = 0;
+                objRiesgo01.mca_terremoto = "N";
+                objRiesgo01.mca_terrorismo = "N";
+                objRiesgo01.mca_conv_II = "N";
+                objRiesgo01.imp_robo = 10000;
+                objRiesgo01.imp_din_caja_chica = 0;
+                objRiesgo01.imp_din_caja_fuerte = 0;
+                objRiesgo01.imp_din_tra_banco = 0;
+                objRiesgo01.imp_din_tra_cobra = 0;
+                objRiesgo01.num_cobradores = 0;
+                objRiesgo01.mca_conv_III = "N";
+                objRiesgo01.imp_sa_rc = 0;
+                objRiesgo01.mca_conv_IV = "N";
+                objRiesgo01.imp_sa_dano_int = 0;
+                objRiesgo01.mca_conv_V = "N";
+                objRiesgo01.imp_sa_ee_glob = 0;
+                objRiesgo01.imp_sa_eq_mov = 0;
+                objRiesgo01.mca_conv_VI = "N";
+                objRiesgo01.suma_aseg = 100000;
+                objRiesgo01.num_total_aseg = 1;
+                objRiesgo01.trama_aseg_VI = ""; //trama
+                objRiesgo01.mca_conv_VII = "N";
+                objRiesgo01.imp_sa_desh_emple = 0;
+                objRiesgo01.num_personas_cubrir = 1;
+                objRiesgo01.trama_aseg_VII = "";
+                objRiesgo01.mca_conv_VIII = "N";
+                objRiesgo01.imp_sa_eq_cont = 0;
+                objRiesgo01.mca_conv_IX = "N";
+                objRiesgo01.imp_sa_car = 0;
+                objRiesgo01.mca_conv_X = "N";
+                objRiesgo01.imp_sa_ear = 0;*/
+
+                datos_riesgo_emite.Add(objRiesgo01);
+
+
+
+                return obtenerEmisionSalud(usuario, password, cod_agt, cod_mon, mca_imp_mapfre_dolar, imp_mapfre_dolar, fec_vcto_pol, fec_vcto_pol, 
+                 pct_dsc_comercial, cod_frac_pago, cod_cia,  cod_ramo,  num_poliza_grupo,cod_modalidad,
+                 num_contrato,num_sub_contrato, mca_fisico_contratante, tip_documento_contratante,cod_documento_contratante,
+                 nombre_contratante, ape_paterno_contratante, telf_fijo_contratante, telf_movil_contratante,
+                 ape_materno_contratante,  mail_contrantante, representante,  cargo_representante, tip_act_economico,
+                 fec_nacimiento_cliente,  mca_sexo,  profesion_cliente,  cod_est_civil,  cod_pais_cli,  cod_nacionalidad_cli,
+                 cod_estado_cli, cod_provincia_cli,  cod_distrito_cli, tipo_domicilio,
+                 domicilio_cliente,  tip_num_cliente,  num_cliente,  tip_interior,  interior_cliente,  tip_zona_cliente, zona_cliente, 
+                 lugar_referencia, cod_parentesco, tip_persona,tip_documento_aseg, cod_documento_aseg, Nom_asegurado,
+                 ape_pat_aseg, ape_mat_asegurado, estado_civil_aseg,  mca_sexo_aseg,  fec_nacimiento_aseg,  cod_ocupacion, cod_especialidad,
+                 texto_beneficiario,num_dependientes, num_poliza_aseg_ant,nom_aseg_ant,
+                 fec_efec_pol_anto, fec_vcto_pol_ant,val_peso,val_estatura,mca_zurdo,imp_pneta_mensual,datos_riesgo_emite
+            
+            
+            );
+
+           }
+
+        #endregion
+    }
+
+  
+}
